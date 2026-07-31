@@ -1,10 +1,10 @@
 import { writeFile, readFile, appendFile } from "fs/promises";
 
-// await writeFile("stud.txt","Ravikant Singh\nRollNo:82");
-// console.log("File written");
+await writeFile("stud.txt","Ravikant Singh\nRollNo:82");
+console.log("File written");
 
-const data = await readFile("stud.txt", "utf-8");
-console.log(`file contents: ${data}`);
+// // const data = await readFile("stud.txt", "utf-8");
+// // console.log(`file contents: ${data}`);
 
 
 const addContent = async (fname, content  ) => {
@@ -21,7 +21,7 @@ const readContent = async (fname) => {
 
 };
 const appendData = async (fname, content) => {
-    await appendData (fname, "\n" + content);
+    await appendFile (fname, "\n" + content);
     console.log("data appended");
 };
 
