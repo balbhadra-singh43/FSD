@@ -1,189 +1,90 @@
-// 
-import readline from "readline/promises";
-import { stdin, stdout } from "process";
-import { writeFile, readFile } from "fs/promises";
+    // product -> id, name , price , qty
+    // add product , remove product, update quantity,showcart , checkout , emptycart and calculate total price
 
-const FILE = "Product.json";
 
-// Read cart from file
-const getCart = async () => {
-    try {
-        const data = await readFile(FILE, "utf-8");
+    import readline from "readline/promises";
+    import { stdin, stdout} from "process";
+    import { writeFile , readFile, appendFile} from "fs/promises";
+
+    // database using file starts
+    const FILE = "./lab 2/product.json";
+
+    const getCart = async () =>{
+        const data = await readFile(FILE , "utf-8");
         return JSON.parse(data);
-    } catch (err) {
-        return [];
-    }
-};
 
-// Save cart to file
-const saveCart = async (cart) => {
-    await writeFile(FILE, JSON.stringify(cart, null, 2));
-};
-
-// Add product
-const addToCart = async (product) => {
-    const cart = await getCart();
-
-    const existing = cart.find((item) => item.id === product.id);
-
-    if (existing) {
-        existing.qty += product.qty;
-    } else {
-        cart.push(product);
     }
 
-    await saveCart(cart);
-    console.log("✅ Product added successfully.");
-};
+    const saveCart = async (cart) => {
+        await writeFile(FILE, JSON.stringify(cart,null,2));
+    };
 
-// Display cart
-const displayCart = async () => {
-    const cart = await getCart();
+    const addToCart = async (product) => {
+        const cart = await getCart();
+        const isFoundInCart = cart.find((p) => p.id === product.id);
+        if(isFoundInCart) {
+            isFoundInCart.qty += 1;
+            await saveCart(cart);
+        }else cart.push(product);
+        await saveCart(cart);
+        console.log(`${product.name} added to cart`);
+    };
 
-    if (cart.length === 0) {
-        console.log("\n🛒 Cart is empty.\n");
-        return;
+    const displayCart = async () => {
+        const cart = await getCart();
+        if(cart.length == 0) {
+            console.log("Cart is empty");
+            return;
+        }
+        console.table(cart);
+        const total = cart.reduce((sum , item) => sum + item.price * item.qty, 0);
+        console.log(`Total Price: ${total}`);
     }
 
-    console.table(cart);
-
-    const total = cart.reduce(
-        (sum, item) => sum + item.price * item.qty,
-        0
-    );
-
-    console.log(`Total Payable Amount = ₹${total}\n`);
-};
-
-// Remove product
-const removeProduct = async (id) => {
-    const cart = await getCart();
-
-    const newCart = cart.filter((item) => item.id !== id);
-
-    if (newCart.length === cart.length) {
-        console.log("❌ Product not found.");
-        return;
-    }
-
-    await saveCart(newCart);
-    console.log("✅ Product removed successfully.");
-};
-
-// Update quantity
-const updateQuantity = async (id, qty) => {
-    const cart = await getCart();
-
-    const product = cart.find((item) => item.id === id);
-
-    if (!product) {
-        console.log("❌ Product not found.");
-        return;
-    }
-
-    product.qty = qty;
-
-    await saveCart(cart);
-    console.log("✅ Quantity updated.");
-};
-
-// Checkout
-const checkout = async () => {
-    const cart = await getCart();
-
-    if (cart.length === 0) {
-        console.log("🛒 Cart is empty.");
-        return;
-    }
-
-    console.table(cart);
-
-    const total = cart.reduce(
-        (sum, item) => sum + item.price * item.qty,
-        0
-    );
-
-    console.log(`\nTotal Amount = ₹${total}`);
-    console.log("🎉 Thank you for shopping!\n");
-
-    await saveCart([]);
-};
-
-// Main function
-const main = async () => {
-    const cin = readline.createInterface({
-        input: stdin,
-        output: stdout,
-    });
-
-    let choice;
-
-    do {
-        console.log("\n========== AMAZON SHOPPING ==========");
+    const main = async () => {
+        let choice;
+        const cin = readline.createInterface({ input: stdin, output: stdout });
+        do {
+        console.log("Welcome to Amazon Shopping 🛒");
         console.log("1. Show Cart");
         console.log("2. Add Product");
         console.log("3. Remove Product");
         console.log("4. Update Quantity");
-        console.log("5. Checkout & Exit");
+        console.log("5. Checkout");
+        console.log("6. Empty Cart");
+        console.log("7. Calculate Total Price");
+        choice = await cin.question("Enter your choice: \n");
 
-        choice = Number(await cin.question("Enter your choice: "));
-
-        switch (choice) {
+        switch(Number(choice)) {
             case 1:
-                await displayCart();
+                displayCart();
                 break;
-
-            case 2: {
-                const input = await cin.question(
-                    "Enter id,name,price,qty: "
-                );
-
-                const [id, name, price, qty] = input
-                    .split(",")
-                    .map((x) => x.trim());
-
-                await addToCart({
-                    id: Number(id),
-                    name,
-                    price: Number(price),
-                    qty: Number(qty),
-                });
+            case 2:
+                const item = await cin.question("Enter product details (id,name,price,qty): ");
+                const [id, name , price , qty] = item.split(",").map((p) => p.trim());
+                await addToCart({id: Number(id), name, price: Number(price), qty: Number(qty)});
 
                 break;
-            }
-
-            case 3: {
-                const id = Number(
-                    await cin.question("Enter Product ID to remove: ")
-                );
-
-                await removeProduct(id);
+            case 3:
+                console.log("Remove Product");
                 break;
-            }
-
-            case 4: {
-                const id = Number(
-                    await cin.question("Enter Product ID: ")
-                );
-
-                const qty = Number(
-                    await cin.question("Enter New Quantity: ")
-                );
-
-                await updateQuantity(id, qty);
+            case 4:
+                console.log("Update Quantity");
                 break;
-            }
-
             case 5:
-                await checkout();
+                console.log("Checkout");
                 break;
-
+            case 6:
+                console.log("Empty Cart");
+                break;
+            case 7:
+                console.log("Calculate Total Price");
+                break;
             default:
-                console.log("❌ Invalid Choice.");
+                console.log("Invalid choice");
         }
-    } while (choice !== 5);
+        } while (choice != 5);
+        cin.close();
+    };
 
-    cin.close();
-};
-
-main();
+    main();
